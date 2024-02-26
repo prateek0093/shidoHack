@@ -1,35 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import "./App.css";
+import { Navbar } from "./Navbar";
+import { Friends } from "./Friends";
+import { Dashboard } from "./Dashboard";
+import { Overlay } from "./Overlay";
+import { useStateContext } from "./context";
+import { bulb } from "./assets";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [nightLight, setNightLight] = useState(true);
+  const [myName, setMyName] = useState(null);
+  const [loadingFrnds, setLoadingFrnds] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [overlayValue, overlaySelector] = useState(0);
+  const [friends, setFriends] = useState([]);
+  const { address, getFriends } = useStateContext();
+  const [txns, setTxns] = useState(null);
+  const [settleTxn, setSettleTxn] = useState(null);
 
+  const toggleLights = () => {
+    setNightLight((val) => !val);
+  };
+  const fetchFriends = async () => {
+    setLoadingFrnds(true);
+    const data = await getFriends(address);
+    if (data != null) {
+      setFriends(data);
+    }
+    setLoadingFrnds(false);
+  };
+  useEffect(() => {
+    if (address != undefined) {
+      fetchFriends();
+    }
+  }, [address]);
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className={`p-3 h-screen ${nightLight ? "bg-[#131318]" : "bg-white"}`}>
+      <Navbar nightLight={nightLight} />
+      <div className="flex justify-center gap-5 mt-4">
+        <Friends
+          friends={friends}
+          loading={loadingFrnds}
+          nightLight={nightLight}
+          myName={myName}
+          setMyName={setMyName}
+          overlaySelector={overlaySelector}
+          setPageLoading={setPageLoading}
+        />
+        <Dashboard
+          nightLight={nightLight}
+          txns={txns}
+          setTxns={setTxns}
+          setSettleTxn={setSettleTxn}
+          overlaySelector={overlaySelector}
+        />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+      <Overlay
+        overlayValue={overlayValue}
+        overlaySelector={overlaySelector}
+        nightLight={nightLight}
+        friends={friends}
+        settleTxn={settleTxn}
+        pageLoading={pageLoading}
+        setPageLoading={setPageLoading}
+      />
+      <div
+        className={`absolute top-[90%] left-[20px] w-[50px] items-center justify-center rounded-full p-1 cursor-pointer z-50 ${
+          nightLight ? "bg-[#1c1c24]" : "bg-[#c9c7c9]"
+        }`}
+        onClick={toggleLights}
+      >
+        <img src={bulb} alt="" />
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
